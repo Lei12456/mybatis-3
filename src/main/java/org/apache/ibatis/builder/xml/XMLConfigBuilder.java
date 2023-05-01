@@ -107,6 +107,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
     parsed = true;
+    //获取整个配置文件的根节点解析
     parseConfiguration(parser.evalNode("/configuration"));
     return configuration;
   }

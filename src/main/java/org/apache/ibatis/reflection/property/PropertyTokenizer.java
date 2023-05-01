@@ -29,13 +29,17 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
   public PropertyTokenizer(String fullname) {
     int delim = fullname.indexOf('.');
     if (delim > -1) {
+      //进来说明有父属性。dept.id,
+      //截取到父属性 此时为dept
       name = fullname.substring(0, delim);
+      //截取到 . 之后的子属性
       children = fullname.substring(delim + 1);
     } else {
       name = fullname;
       children = null;
     }
     indexedName = name;
+    //另一种表达式解析
     delim = name.indexOf('[');
     if (delim > -1) {
       index = name.substring(delim + 1, name.length() - 1);

@@ -141,11 +141,15 @@ public class BeanWrapper extends BaseWrapper {
   @Override
   public MetaObject instantiatePropertyValue(String name, PropertyTokenizer prop, ObjectFactory objectFactory) {
     MetaObject metaValue;
+    //通过属性的名字获取到 Claas类型
     Class<?> type = getSetterType(prop.getName());
     try {
+      //根据类型创建对象实例
       Object newObject = objectFactory.create(type);
+      //递归
       metaValue = MetaObject.forObject(newObject, metaObject.getObjectFactory(), metaObject.getObjectWrapperFactory(),
           metaObject.getReflectorFactory());
+      //属性赋值
       set(prop, newObject);
     } catch (Exception e) {
       throw new ReflectionException("Cannot set value of property '" + name + "' because '" + name

@@ -22,6 +22,7 @@ import java.sql.SQLException;
 
 /**
  * @author Clinton Begin
+ * 类型转化器，使用策略模式实现类每种不同类型的解析转换
  */
 public interface TypeHandler<T> {
 
