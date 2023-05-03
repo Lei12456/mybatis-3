@@ -96,6 +96,7 @@ public class CacheBuilder {
     // issue #352, do not apply decorators to custom caches
     if (PerpetualCache.class.equals(cache.getClass())) {
       for (Class<? extends Cache> decorator : decorators) {
+        //LRUCache 包装
         cache = newCacheDecoratorInstance(decorator, cache);
         setCacheProperties(cache);
       }
@@ -115,6 +116,7 @@ public class CacheBuilder {
     }
   }
 
+  //根据mapper配置的参数对 cache进行装饰增强
   private Cache setStandardDecorators(Cache cache) {
     try {
       MetaObject metaCache = SystemMetaObject.forObject(cache);

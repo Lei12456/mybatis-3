@@ -28,6 +28,7 @@ import org.apache.ibatis.session.Configuration;
 
 /**
  * @author Clinton Begin
+ * //动态拼接sql
  */
 public class DynamicContext {
 
@@ -37,8 +38,9 @@ public class DynamicContext {
   static {
     OgnlRuntime.setPropertyAccessor(ContextMap.class, new ContextAccessor());
   }
-
+  //Ognl所需要的上下文
   private final ContextMap bindings;
+  //
   private final StringJoiner sqlBuilder = new StringJoiner(" ");
   private int uniqueNumber;
 

@@ -50,6 +50,7 @@ public class SerializedCache implements Cache {
     return delegate.getSize();
   }
 
+  //put的时候进行序列化操作
   @Override
   public void putObject(Object key, Object object) {
     if ((object != null) && !(object instanceof Serializable)) {
@@ -58,6 +59,7 @@ public class SerializedCache implements Cache {
     delegate.putObject(key, serialize((Serializable) object));
   }
 
+  //get的时候进行反序列化操作
   @Override
   public Object getObject(Object key) {
     Object object = delegate.getObject(key);

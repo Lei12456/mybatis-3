@@ -20,19 +20,26 @@ import java.util.List;
 
 /**
  * @author Clinton Begin
+ * 当前数据源连接的状态管理
  */
 public class PoolState {
 
   protected PooledDataSource dataSource;
 
+  //空闲连接池
   protected final List<PooledConnection> idleConnections = new ArrayList<>();
+  //活跃的链接池
   protected final List<PooledConnection> activeConnections = new ArrayList<>();
+  //请求累计次数
   protected long requestCount;
+  //请求累计时间
   protected long accumulatedRequestTime;
+  //拿出去使用连接的时间
   protected long accumulatedCheckoutTime;
   protected long claimedOverdueConnectionCount;
   protected long accumulatedCheckoutTimeOfOverdueConnections;
   protected long accumulatedWaitTime;
+  //当前线程获取连接时等待的累加次数
   protected long hadToWaitCount;
   protected long badConnectionCount;
 

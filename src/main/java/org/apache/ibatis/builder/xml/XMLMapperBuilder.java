@@ -96,9 +96,12 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   public void parse() {
+    //当前mapper文件是否有被加载过
     if (!configuration.isResourceLoaded(resource)) {
+      //解析标签的无聊
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
+      //绑定dao接口和
       bindMapperForNamespace();
     }
 
@@ -118,9 +121,12 @@ public class XMLMapperBuilder extends BaseBuilder {
         throw new BuilderException("Mapper's namespace cannot be empty");
       }
       builderAssistant.setCurrentNamespace(namespace);
+      //又到了无聊的解析标签的过程,这里是二级缓存的解析过程
       cacheRefElement(context.evalNode("cache-ref"));
       cacheElement(context.evalNode("cache"));
+
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
+      //结果集映射解析
       resultMapElements(context.evalNodes("/mapper/resultMap"));
       sqlElement(context.evalNodes("/mapper/sql"));
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
@@ -208,7 +214,9 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void cacheElement(XNode context) {
     if (context != null) {
+      //没配置就默认提供一个 PERPETUAL 缓存
       String type = context.getStringAttribute("type", "PERPETUAL");
+      //然后去别名注册器解析出来他的实现类
       Class<? extends Cache> typeClass = typeAliasRegistry.resolveAlias(type);
       String eviction = context.getStringAttribute("eviction", "LRU");
       Class<? extends Cache> evictionClass = typeAliasRegistry.resolveAlias(eviction);
@@ -217,6 +225,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       boolean readWrite = !context.getBooleanAttribute("readOnly", false);
       boolean blocking = context.getBooleanAttribute("blocking", false);
       Properties props = context.getChildrenAsProperties();
+      //上面解析出来的标签 然后创建这个newCache
       builderAssistant.useNewCache(typeClass, evictionClass, flushInterval, size, readWrite, blocking, props);
     }
   }
@@ -262,6 +271,8 @@ public class XMLMapperBuilder extends BaseBuilder {
     return resultMapElement(resultMapNode, Collections.emptyList(), null);
   }
 
+  //每一个  <resultMap id="BASE-RESULT" type="org.apache.ibatis.domain.jpetstore.Account">
+  //都会转成一个ResultMap 实例
   private ResultMap resultMapElement(XNode resultMapNode, List<ResultMapping> additionalResultMappings,
       Class<?> enclosingType) {
     ErrorContext.instance().activity("processing " + resultMapNode.getValueBasedIdentifier());
@@ -284,6 +295,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         if ("id".equals(resultChild.getName())) {
           flags.add(ResultFlag.ID);
         }
+        //每一个 <result property="username" column="user_name" /> 都会转成 ResultMapping
         resultMappings.add(buildResultMappingFromContext(resultChild, typeClass, flags));
       }
     }
@@ -356,6 +368,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     for (XNode context : list) {
       String databaseId = context.getStringAttribute("databaseId");
       String id = context.getStringAttribute("id");
+      //
       id = builderAssistant.applyCurrentNamespace(id, false);
       if (databaseIdMatchesCurrent(id, databaseId, requiredDatabaseId)) {
         sqlFragments.put(id, context);

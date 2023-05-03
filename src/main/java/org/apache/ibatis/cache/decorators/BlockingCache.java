@@ -38,6 +38,7 @@ public class BlockingCache implements Cache {
 
   private long timeout;
   private final Cache delegate;
+  //为每一个key设置一个 countDownLatch
   private final ConcurrentHashMap<Object, CountDownLatch> locks;
 
   public BlockingCache(Cache delegate) {
@@ -66,7 +67,9 @@ public class BlockingCache implements Cache {
 
   @Override
   public Object getObject(Object key) {
+    //获取速等待
     acquireLock(key);
+    //第一次从数据库里面读取
     Object value = delegate.getObject(key);
     if (value != null) {
       releaseLock(key);
@@ -87,14 +90,21 @@ public class BlockingCache implements Cache {
   }
 
   private void acquireLock(Object key) {
+    //为每一个key设置一个门栓 步长为1
     CountDownLatch newLatch = new CountDownLatch(1);
     while (true) {
+      //将新的Latch放map中，如果存在 返回旧的 CountDownLatch
+      //如果不存在，返回null,证明是第一次获取
       CountDownLatch latch = locks.putIfAbsent(key, newLatch);
+      //这个时候不阻塞，查询数据库进行 I/O操作
       if (latch == null) {
         break;
       }
       try {
+        //说明不是第一次获取，
+        // 当第二个线程进来之后，阻塞在这里，等待第一个线程 进行释放锁的操作 也即是latch.down()
         if (timeout > 0) {
+          //进行指定时间等待
           boolean acquired = latch.await(timeout, TimeUnit.MILLISECONDS);
           if (!acquired) {
             throw new CacheException(

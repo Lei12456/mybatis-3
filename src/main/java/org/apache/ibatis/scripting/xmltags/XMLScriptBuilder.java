@@ -73,11 +73,14 @@ public class XMLScriptBuilder extends BaseBuilder {
     return sqlSource;
   }
 
+  //构建一个完成的MixedSqlNode 混合标签
   protected MixedSqlNode parseDynamicTags(XNode node) {
     List<SqlNode> contents = new ArrayList<>();
     NodeList children = node.getNode().getChildNodes();
+    //遍历所有的子元素
     for (int i = 0; i < children.getLength(); i++) {
       XNode child = node.newXNode(children.item(i));
+      //判断是否是文本或者 <!CDATA[ ... ]>
       if (child.getNode().getNodeType() == Node.CDATA_SECTION_NODE || child.getNode().getNodeType() == Node.TEXT_NODE) {
         String data = child.getStringBody("");
         TextSqlNode textSqlNode = new TextSqlNode(data);
@@ -87,12 +90,15 @@ public class XMLScriptBuilder extends BaseBuilder {
         } else {
           contents.add(new StaticTextSqlNode(data));
         }
+        //这里是判断是否是元素结点标签， 如：<where> <if>...
       } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
         String nodeName = child.getNode().getNodeName();
+        //根据标签的名字获取具体的策略类
         NodeHandler handler = nodeHandlerMap.get(nodeName);
         if (handler == null) {
           throw new BuilderException("Unknown element <" + nodeName + "> in SQL statement.");
         }
+        //不同标签的处理方法
         handler.handleNode(child, contents);
         isDynamic = true;
       }

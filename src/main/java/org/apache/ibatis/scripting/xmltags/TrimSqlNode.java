@@ -55,7 +55,9 @@ public class TrimSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     FilteredDynamicContext filteredDynamicContext = new FilteredDynamicContext(context);
+    //内部sql 可能是 and id = 1 and id = 2
     boolean result = contents.apply(filteredDynamicContext);
+    //前缀、后缀处理
     filteredDynamicContext.applyAll();
     return result;
   }
@@ -73,8 +75,11 @@ public class TrimSqlNode implements SqlNode {
   }
 
   private class FilteredDynamicContext extends DynamicContext {
+    //代理增强
     private final DynamicContext delegate;
+    //前缀
     private boolean prefixApplied;
+    //后缀
     private boolean suffixApplied;
     private StringBuilder sqlBuffer;
 
@@ -126,6 +131,8 @@ public class TrimSqlNode implements SqlNode {
         prefixApplied = true;
         if (prefixesToOverride != null) {
           for (String toRemove : prefixesToOverride) {
+            //AND ", "OR ", "AND\n", "OR\n", "AND\r", "OR\r", "AND\t","OR\t"
+            //如果是以这些关键字开头的，去除掉
             if (trimmedUppercaseSql.startsWith(toRemove)) {
               sql.delete(0, toRemove.trim().length());
               break;

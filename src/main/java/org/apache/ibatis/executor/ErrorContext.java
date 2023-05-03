@@ -21,8 +21,10 @@ package org.apache.ibatis.executor;
 public class ErrorContext {
 
   private static final String LINE_SEPARATOR = System.lineSeparator();
+  //当前线程创建一个本地变量副本，一个连接开启一个事务，
   private static final ThreadLocal<ErrorContext> LOCAL = ThreadLocal.withInitial(ErrorContext::new);
 
+  //缓存一个
   private ErrorContext stored;
   private String resource;
   private String activity;

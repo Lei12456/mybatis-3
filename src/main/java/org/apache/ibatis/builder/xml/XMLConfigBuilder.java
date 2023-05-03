@@ -53,8 +53,11 @@ import org.apache.ibatis.type.JdbcType;
  */
 public class XMLConfigBuilder extends BaseBuilder {
 
+  //是否被解析过
   private boolean parsed;
+  //解析器
   private final XPathParser parser;
+  //
   private String environment;
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
@@ -107,7 +110,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
     parsed = true;
-    //获取整个配置文件的根节点解析
+    //获取整个配置文件的根节点解析 也就是 <configuration></configuration>
     parseConfiguration(parser.evalNode("/configuration"));
     return configuration;
   }
@@ -115,6 +118,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void parseConfiguration(XNode root) {
     try {
       // issue #117 read properties first
+      //解析properties标签
       propertiesElement(root.evalNode("properties"));
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfs(settings);
@@ -124,10 +128,13 @@ public class XMLConfigBuilder extends BaseBuilder {
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+      //设置configuration剩余的默认配置项
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
+      //读取默认的数据库环境
       environmentsElement(root.evalNode("environments"));
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+      //策略模式实现类型转换，javaType 对应 JdbcType
       typeHandlerElement(root.evalNode("typeHandlers"));
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
@@ -143,6 +150,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     // Check that all settings are known to the configuration class
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
     for (Object key : props.keySet()) {
+      //判断settings中配置项，是否在Configuration中有没有 这个变量的 setter方法
       if (!metaConfig.hasSetter(String.valueOf(key))) {
         throw new BuilderException(
             "The setting " + key + " is not known.  Make sure you spelled it correctly (case sensitive).");
@@ -173,10 +181,12 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        // <package name=""/>
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
+          //<typeAlias type="org.apache.ibatis.domain.jpetstore.Account" />
           String alias = child.getStringAttribute("alias");
           String type = child.getStringAttribute("type");
           try {
@@ -235,8 +245,11 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
+      //把<properties>标签转换成 property键值对
       Properties defaults = context.getChildrenAsProperties();
+      //获取<properties resource = ""> 属性
       String resource = context.getStringAttribute("resource");
+      ////获取<properties url = ""> 属性
       String url = context.getStringAttribute("url");
       if (resource != null && url != null) {
         throw new BuilderException(
@@ -251,6 +264,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       if (vars != null) {
         defaults.putAll(vars);
       }
+      //最后塞到variables中
       parser.setVariables(defaults);
       configuration.setVariables(defaults);
     }
@@ -302,6 +316,7 @@ public class XMLConfigBuilder extends BaseBuilder {
         String id = child.getStringAttribute("id");
         if (isSpecifiedEnvironment(id)) {
           TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
+          //获取数据源工厂
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
           DataSource dataSource = dsFactory.getDataSource();
           Environment.Builder environmentBuilder = new Environment.Builder(id).transactionFactory(txFactory)
@@ -321,12 +336,17 @@ public class XMLConfigBuilder extends BaseBuilder {
       if ("VENDOR".equals(type)) {
         type = "DB_VENDOR";
       }
+      //  <databaseIdProvider type="">
+      //        <property name="" value=""/>
+      //    </databaseIdProvider>
       Properties properties = context.getChildrenAsProperties();
       databaseIdProvider = (DatabaseIdProvider) resolveClass(type).getDeclaredConstructor().newInstance();
       databaseIdProvider.setProperties(properties);
     }
     Environment environment = configuration.getEnvironment();
     if (environment != null && databaseIdProvider != null) {
+      //每个数据库厂商需要实现 DatabaseMetaData 中 getProductBaseName来表示自己 数据库名字
+      //以此来确定本次数据库连接用的是哪个数据库
       String databaseId = databaseIdProvider.getDatabaseId(environment.getDataSource());
       configuration.setDatabaseId(databaseId);
     }
@@ -357,6 +377,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void typeHandlerElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //处理package标签
         if ("package".equals(child.getName())) {
           String typeHandlerPackage = child.getStringAttribute("name");
           typeHandlerRegistry.register(typeHandlerPackage);
@@ -369,11 +390,14 @@ public class XMLConfigBuilder extends BaseBuilder {
           Class<?> typeHandlerClass = resolveClass(handlerTypeName);
           if (javaTypeClass != null) {
             if (jdbcType == null) {
+              //注册javaType
               typeHandlerRegistry.register(javaTypeClass, typeHandlerClass);
             } else {
+              //注册jdbcTyppe
               typeHandlerRegistry.register(javaTypeClass, jdbcType, typeHandlerClass);
             }
           } else {
+            //注册自定义type转换器
             typeHandlerRegistry.register(typeHandlerClass);
           }
         }

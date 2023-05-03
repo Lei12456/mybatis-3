@@ -27,6 +27,7 @@ public class ExceptionFactory {
   }
 
   public static RuntimeException wrapException(String message, Exception e) {
+    //持久化异常
     return new PersistenceException(ErrorContext.instance().message(message).cause(e).toString(), e);
   }
 

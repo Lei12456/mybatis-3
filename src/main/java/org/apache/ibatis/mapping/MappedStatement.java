@@ -33,8 +33,11 @@ import org.apache.ibatis.session.Configuration;
  */
 public final class MappedStatement {
 
+  //来自于那个mapper文件
   private String resource;
+  //配置文件
   private Configuration configuration;
+  //mapper文件id
   private String id;
   private Integer fetchSize;
   private Integer timeout;
