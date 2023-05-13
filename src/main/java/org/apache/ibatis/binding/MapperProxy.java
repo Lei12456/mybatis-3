@@ -33,6 +33,7 @@ import org.apache.ibatis.util.MapUtil;
 /**
  * @author Clinton Begin
  * @author Eduardo Macarron
+ * mapper动态代理的核心类
  */
 public class MapperProxy<T> implements InvocationHandler, Serializable {
 
@@ -80,9 +81,11 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
+      //代理对象进来的方法，调用query()方法是会进来
       if (Object.class.equals(method.getDeclaringClass())) {
         return method.invoke(this, args);
       }
+      //核心逻辑！！！！！
       return cachedInvoker(method).invoke(proxy, method, args, sqlSession);
     } catch (Throwable t) {
       throw ExceptionUtil.unwrapThrowable(t);

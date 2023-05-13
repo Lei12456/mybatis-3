@@ -1,6 +1,7 @@
 package com.yl;
 
 
+import com.yl.mapper.AccountMapper;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.apache.ibatis.builder.CustomObjectWrapperFactory;
@@ -37,7 +38,22 @@ import java.util.Properties;
 
 public class ToolTest {
 
+  @Test
+  public void testExecutor() throws FileNotFoundException {
+    SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(
+      new FileInputStream("D:\\learning\\source-code\\mybatis-3\\src\\test\\resources\\com.yl\\mybatis-config.xml"));
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+  }
 
+
+  @Test
+  public void testProxy() throws FileNotFoundException {
+    SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(
+      new FileInputStream("D:\\learning\\source-code\\mybatis-3\\src\\test\\resources\\com.yl\\mybatis-config.xml"));
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    AccountMapper mapper = sqlSession.getMapper(AccountMapper.class);
+
+  }
   @Test
   public void startup() throws FileNotFoundException {
     SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(

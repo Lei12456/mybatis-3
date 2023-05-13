@@ -722,6 +722,7 @@ public class Configuration {
   }
 
   public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
+    //可以配置、默认simple
     executorType = executorType == null ? defaultExecutorType : executorType;
     Executor executor;
     if (ExecutorType.BATCH == executorType) {
@@ -731,9 +732,11 @@ public class Configuration {
     } else {
       executor = new SimpleExecutor(this, transaction);
     }
+    //如果开启了缓存，装饰一下执行器，让他具有二级缓存的能力
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }
+    //插件能力增强
     return (Executor) interceptorChain.pluginAll(executor);
   }
 

@@ -138,6 +138,7 @@ public abstract class BaseExecutor implements Executor {
   }
 
   @SuppressWarnings("unchecked")
+  //整体嵌套查询是一个递归
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler,
       CacheKey key, BoundSql boundSql) throws SQLException {
@@ -145,11 +146,14 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    //是否刷新二级缓存
+    //第一次查询进来这个 首先清理一波缓存
     if (queryStack == 0 && ms.isFlushCacheRequired()) {
       clearLocalCache();
     }
     List<E> list;
     try {
+      //执行一次加 + 1
       queryStack++;
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
@@ -158,9 +162,11 @@ public abstract class BaseExecutor implements Executor {
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
+      //然后 - 1
       queryStack--;
     }
     if (queryStack == 0) {
+      //Deffered代表是否缓存过
       for (DeferredLoad deferredLoad : deferredLoads) {
         deferredLoad.load();
       }
@@ -328,6 +334,7 @@ public abstract class BaseExecutor implements Executor {
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds,
       ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
+    //设置占位符，防止多线程并发，
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
     try {
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
